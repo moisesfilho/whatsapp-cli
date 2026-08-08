@@ -6,7 +6,6 @@ const catalogEn: Catalog = {
   "error.unauthorized": "Session expired. Run `whatsapp login` again.",
   "error.restart.required": "Restart your WhatsApp client and run `whatsapp login` again.",
   "error.connection": "Could not connect to WhatsApp: {error}",
-  "error.registration": "Device registration did not complete. Run `whatsapp login` again.",
   "error.not_logged_in": "Not authenticated. Run `whatsapp login` first to pair with QR code.",
   "error.invalid_number": "Invalid phone number: {number}",
   "error.not_on_whatsapp": "{number} is not registered on WhatsApp.",
@@ -43,8 +42,6 @@ const catalogPt: Catalog = {
   "error.unauthorized": "Sessão expirada. Execute `whatsapp login` novamente.",
   "error.restart.required": "Reinicie o app e execute `whatsapp login` novamente.",
   "error.connection": "Não foi possível conectar ao WhatsApp: {error}",
-  "error.registration":
-    "O registro do dispositivo não foi concluído. Execute `whatsapp login` novamente.",
   "error.not_logged_in":
     "Não autenticado. Execute `whatsapp login` primeiro para parear via QR code.",
   "error.invalid_number": "Número de telefone inválido: {number}",

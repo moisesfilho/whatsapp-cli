@@ -28,24 +28,6 @@ const REASON_TEXT: Partial<Record<number, string>> = {
   [DisconnectReason.multideviceMismatch]: "multidevice-mismatch",
 };
 
-export async function waitForRegistration(socket: WaClient, timeoutMs = 60_000): Promise<boolean> {
-  if (socket.authState.creds.registered) {
-    return true;
-  }
-  return new Promise((resolve) => {
-    const timer = setTimeout(() => {
-      resolve(false);
-    }, timeoutMs);
-    socket.ev.on("creds.update", (creds) => {
-      if (!creds.registered) {
-        return;
-      }
-      clearTimeout(timer);
-      resolve(true);
-    });
-  });
-}
-
 export function reasonText(reason: number): string {
   return REASON_TEXT[reason] ?? "unknown";
 }
