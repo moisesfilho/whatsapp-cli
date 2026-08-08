@@ -90,18 +90,18 @@ The header is optional. Phone numbers are normalized (country code `55` is added
 
 All files are stored in `~/.config/whatsapp-cli/`:
 
-| Path | Purpose |
-|------|---------|
-| `config.json` | Language and log retention settings |
-| `session/` | WhatsApp multi-device session (credentials) |
-| `logs/` | Reserved for future logging |
-| `history.jsonl` | Message delivery history |
+| Path            | Purpose                                     |
+| --------------- | ------------------------------------------- |
+| `config.json`   | Language and log retention settings         |
+| `session/`      | WhatsApp multi-device session (credentials) |
+| `logs/`         | Reserved for future logging                 |
+| `history.jsonl` | Message delivery history                    |
 
 Environment variables:
 
-| Variable | Description |
-|----------|-------------|
-| `WHATSAPP_CLI_LANGUAGE` | Override interface language (`en` or `pt`) |
+| Variable                  | Description                                   |
+| ------------------------- | --------------------------------------------- |
+| `WHATSAPP_CLI_LANGUAGE`   | Override interface language (`en` or `pt`)    |
 | `WHATSAPP_CLI_CONFIG_DIR` | Override the config directory (used in tests) |
 
 ## Project structure

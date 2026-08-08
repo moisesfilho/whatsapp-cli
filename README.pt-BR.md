@@ -90,18 +90,18 @@ O cabeçalho é opcional. Os números são normalizados (o código do país `55`
 
 Todos os arquivos ficam em `~/.config/whatsapp-cli/`:
 
-| Caminho | Finalidade |
-|---------|------------|
-| `config.json` | Configurações de idioma e retenção de logs |
-| `session/` | Sessão multi-dispositivo do WhatsApp (credenciais) |
-| `logs/` | Reservado para logging futuro |
-| `history.jsonl` | Histórico de envios |
+| Caminho         | Finalidade                                         |
+| --------------- | -------------------------------------------------- |
+| `config.json`   | Configurações de idioma e retenção de logs         |
+| `session/`      | Sessão multi-dispositivo do WhatsApp (credenciais) |
+| `logs/`         | Reservado para logging futuro                      |
+| `history.jsonl` | Histórico de envios                                |
 
 Variáveis de ambiente:
 
-| Variável | Descrição |
-|----------|-----------|
-| `WHATSAPP_CLI_LANGUAGE` | Sobrescreve o idioma da interface (`en` ou `pt`) |
+| Variável                  | Descrição                                                 |
+| ------------------------- | --------------------------------------------------------- |
+| `WHATSAPP_CLI_LANGUAGE`   | Sobrescreve o idioma da interface (`en` ou `pt`)          |
 | `WHATSAPP_CLI_CONFIG_DIR` | Sobrescreve o diretório de configuração (usado em testes) |
 
 ## Estrutura do projeto
