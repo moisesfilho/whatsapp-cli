@@ -35,7 +35,7 @@ vi.mock("baileys", () => {
   };
 });
 
-import { connect, hasSession, logout, reasonText } from "../src/client.js";
+import { connect, hasSession, logout, reasonText, waitForConnection } from "../src/client.js";
 import { DisconnectReason } from "baileys";
 
 function makeFakeSocket() {
@@ -146,6 +146,63 @@ describe("logout", () => {
     expect(() => {
       logout(path.join(TMP_DIR, "missing"));
     }).not.toThrow();
+  });
+});
+
+describe("waitForConnection", () => {
+  it("resolves open when the connection opens", async () => {
+    const socket = makeFakeSocket();
+    const promise = waitForConnection(socket);
+    emit("connection.update", { connection: "open" });
+    await expect(promise).resolves.toBe("open");
+  });
+
+  it("resolves restart on restartRequired", async () => {
+    const socket = makeFakeSocket();
+    const promise = waitForConnection(socket);
+    emit("connection.update", {
+      lastDisconnect: { error: { output: { statusCode: DisconnectReason.restartRequired } } },
+    });
+    await expect(promise).resolves.toBe("restart");
+  });
+
+  it("resolves logged-out on loggedOut", async () => {
+    const socket = makeFakeSocket();
+    const promise = waitForConnection(socket);
+    emit("connection.update", {
+      lastDisconnect: { error: { output: { statusCode: DisconnectReason.loggedOut } } },
+    });
+    await expect(promise).resolves.toBe("logged-out");
+  });
+
+  it("resolves timeout after the timeout", async () => {
+    const socket = makeFakeSocket();
+    await expect(waitForConnection(socket, 10)).resolves.toBe("timeout");
+  });
+
+  it("ignores errors without output and times out", async () => {
+    const socket = makeFakeSocket();
+    const promise = waitForConnection(socket, 10);
+    emit("connection.update", {
+      lastDisconnect: { error: new Error("no status") },
+    });
+    await expect(promise).resolves.toBe("timeout");
+  });
+
+  it("ignores unknown disconnect statuses and times out", async () => {
+    const socket = makeFakeSocket();
+    const promise = waitForConnection(socket, 10);
+    emit("connection.update", {
+      lastDisconnect: { error: { output: { statusCode: DisconnectReason.timedOut } } },
+    });
+    await expect(promise).resolves.toBe("timeout");
+  });
+
+  it("ignores closes without an error and times out", async () => {
+    const socket = makeFakeSocket();
+    const promise = waitForConnection(socket, 10);
+    emit("connection.update", { connection: "close" });
+    await expect(promise).resolves.toBe("timeout");
   });
 });
 

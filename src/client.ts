@@ -76,3 +76,31 @@ export function hasSession(sessionDir?: string): boolean {
     return false;
   }
 }
+
+export type ConnectionResult = "open" | "restart" | "logged-out" | "timeout";
+
+export function waitForConnection(socket: WaClient, timeoutMs = 30_000): Promise<ConnectionResult> {
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => {
+      resolve("timeout");
+    }, timeoutMs);
+    socket.ev.on("connection.update", (update) => {
+      if (update.connection === "open") {
+        clearTimeout(timer);
+        resolve("open");
+        return;
+      }
+      if (update.lastDisconnect?.error) {
+        const error = update.lastDisconnect.error;
+        const status = "output" in error ? error.output.statusCode : undefined;
+        if (status === DisconnectReason.restartRequired) {
+          clearTimeout(timer);
+          resolve("restart");
+        } else if (status === DisconnectReason.loggedOut) {
+          clearTimeout(timer);
+          resolve("logged-out");
+        }
+      }
+    });
+  });
+}

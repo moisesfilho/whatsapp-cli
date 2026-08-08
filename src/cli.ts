@@ -3,7 +3,7 @@
 import { Command } from "commander";
 import qrcode from "qrcode-terminal";
 import { loadConfig, saveConfig, i18n, sessionDir } from "./config.js";
-import { connect, logout, hasSession, type WaClient } from "./client.js";
+import { connect, logout, hasSession, waitForConnection, type WaClient } from "./client.js";
 import { sendText, sendBatch } from "./send.js";
 import { listGroups, findGroup } from "./groups.js";
 import { recipientsFromCsv, readCsvFile } from "./csv.js";
@@ -27,6 +27,13 @@ async function main(): Promise<void> {
   ): Promise<TReturn> {
     const socket = await connect({ sessionDir: sessionDir() });
     try {
+      const result = await waitForConnection(socket);
+      if (result === "logged-out") {
+        throw new Error(t("error.unauthorized"));
+      }
+      if (result !== "open") {
+        throw new Error(t("error.connection", { error: "timeout" }));
+      }
       return await action(socket);
     } finally {
       socket.end(undefined);
@@ -41,22 +48,28 @@ async function main(): Promise<void> {
         console.log(t("login.already_paired"));
         return;
       }
-      const socket = await connect({
+      let socket = await connect({
         sessionDir: sessionDir(),
         onQr: (qr) => {
           console.log(`\n${t("login.pairing")}\n`);
           qrcode.generate(qr, { small: true });
         },
       });
-      await new Promise<void>((resolve) => {
-        socket.ev.on("connection.update", (update) => {
-          if (update.connection !== "open") {
-            return;
-          }
-          console.log(`\n${t("login.success")}`);
-          resolve();
-        });
-      });
+      let result = await waitForConnection(socket, 300_000);
+      while (result === "restart") {
+        socket.end(undefined);
+        socket = await connect({ sessionDir: sessionDir() });
+        result = await waitForConnection(socket, 300_000);
+      }
+      if (result === "logged-out") {
+        console.error(t("error.unauthorized"));
+        process.exitCode = 1;
+      } else if (result === "timeout") {
+        console.error(t("error.connection", { error: "timeout" }));
+        process.exitCode = 1;
+      } else {
+        console.log(`\n${t("login.success")}`);
+      }
       socket.end(undefined);
     });
 
