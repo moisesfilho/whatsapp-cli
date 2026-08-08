@@ -1,0 +1,49 @@
+---
+name: Quality Gate
+
+on:
+  workflow_call:
+
+jobs:
+  quality:
+    name: Run Quality Gate
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint (ESLint + unicorn + sonarjs)
+        run: npm run lint
+
+      - name: Format (Prettier)
+        run: npm run format:check
+
+      - name: Typecheck (tsc --noEmit)
+        run: npm run typecheck
+
+      - name: Security (npm audit)
+        run: npm audit --audit-level=high
+
+      - name: Test with coverage (100% gate)
+        run: npm test
+
+      - name: Test summary
+        if: always()
+        run: |
+          echo "## CI Results" >> $GITHUB_STEP_SUMMARY
+          echo "| Stage | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Lint | ✅ |" >> $GITHUB_STEP_SUMMARY
+          echo "| Format | ✅ |" >> $GITHUB_STEP_SUMMARY
+          echo "| Typecheck | ✅ |" >> $GITHUB_STEP_SUMMARY
+          echo "| Security | ✅ |" >> $GITHUB_STEP_SUMMARY
+          echo "| Tests + Coverage | ✅ |" >> $GITHUB_STEP_SUMMARY

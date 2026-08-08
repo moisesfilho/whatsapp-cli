@@ -1,0 +1,66 @@
+---
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  quality-gate:
+    uses: ./.github/workflows/quality-gate.yml
+
+  build:
+    name: Build & Release
+    needs: quality-gate
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Package binaries (pkg)
+        run: |
+          npx pkg dist/cli.js \
+            --targets node24-linux-x64,node24-linux-arm64,node24-win-x64,node24-darwin-x64,node24-darwin-arm64 \
+            --output dist/whatsapp-cli
+
+      - name: Generate release notes
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          echo "## Changelog" > CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          echo "**Version:** \`${TAG}\`" >> CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          git log --oneline --no-decorate "$(git describe --tags --abbrev=0 HEAD~1 2>/dev/null || git rev-list --max-parents=0 HEAD)..HEAD" \
+            | while read line; do echo "- $line"; done >> CHANGELOG.md
+
+      - name: Release summary
+        run: |
+          echo "## Release ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Binaries: linux-x64, linux-arm64, win-x64, darwin-x64, darwin-arm64" >> $GITHUB_STEP_SUMMARY
+          echo "- Quality gate: passed" >> $GITHUB_STEP_SUMMARY
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          body_path: CHANGELOG.md
+          files: dist/whatsapp-cli-*
+          draft: false
+          prerelease: ${{ contains(github.ref_name, 'alpha') || contains(github.ref_name, 'beta') || contains(github.ref_name, 'rc') }}
