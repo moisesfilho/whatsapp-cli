@@ -3,7 +3,14 @@
 import { Command } from "commander";
 import qrcode from "qrcode-terminal";
 import { loadConfig, saveConfig, i18n, sessionDir } from "./config.js";
-import { connect, logout, hasSession, waitForConnection, type WaClient } from "./client.js";
+import {
+  connect,
+  logout,
+  hasSession,
+  waitForConnection,
+  waitForRegistration,
+  type WaClient,
+} from "./client.js";
 import { sendText, sendBatch } from "./send.js";
 import { listGroups, findGroup } from "./groups.js";
 import { recipientsFromCsv, readCsvFile } from "./csv.js";
@@ -33,6 +40,10 @@ async function main(): Promise<void> {
       }
       if (result !== "open") {
         throw new Error(t("error.connection", { error: "timeout" }));
+      }
+      const registered = await waitForRegistration(socket);
+      if (!registered) {
+        throw new Error(t("error.registration"));
       }
       return await action(socket);
     } finally {
@@ -68,7 +79,13 @@ async function main(): Promise<void> {
         console.error(t("error.connection", { error: "timeout" }));
         process.exitCode = 1;
       } else {
-        console.log(`\n${t("login.success")}`);
+        const registered = await waitForRegistration(socket);
+        if (registered) {
+          console.log(`\n${t("login.success")}`);
+        } else {
+          console.error(t("error.registration"));
+          process.exitCode = 1;
+        }
       }
       socket.end(undefined);
     });

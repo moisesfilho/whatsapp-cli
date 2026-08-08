@@ -1,5 +1,6 @@
 import makeWASocket, { DisconnectReason, useMultiFileAuthState, type WASocket } from "baileys";
 import { mkdirSync, readdirSync, rmSync } from "node:fs";
+import { pino } from "pino";
 import { sessionDir as configSessionDir } from "./config.js";
 
 export type WaClient = WASocket;
@@ -27,6 +28,24 @@ const REASON_TEXT: Partial<Record<number, string>> = {
   [DisconnectReason.multideviceMismatch]: "multidevice-mismatch",
 };
 
+export async function waitForRegistration(socket: WaClient, timeoutMs = 60_000): Promise<boolean> {
+  if (socket.authState.creds.registered) {
+    return true;
+  }
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => {
+      resolve(false);
+    }, timeoutMs);
+    socket.ev.on("creds.update", (creds) => {
+      if (!creds.registered) {
+        return;
+      }
+      clearTimeout(timer);
+      resolve(true);
+    });
+  });
+}
+
 export function reasonText(reason: number): string {
   return REASON_TEXT[reason] ?? "unknown";
 }
@@ -41,6 +60,7 @@ export async function connect(options: ConnectionOptions = {}): Promise<WaClient
     printQRInTerminal: false,
     syncFullHistory: false,
     markOnlineOnConnect: true,
+    logger: pino({ level: "silent" }),
   });
 
   socket.ev.on("creds.update", () => {

@@ -35,7 +35,14 @@ vi.mock("baileys", () => {
   };
 });
 
-import { connect, hasSession, logout, reasonText, waitForConnection } from "../src/client.js";
+import {
+  connect,
+  hasSession,
+  logout,
+  reasonText,
+  waitForConnection,
+  waitForRegistration,
+} from "../src/client.js";
 import { DisconnectReason } from "baileys";
 
 function makeFakeSocket() {
@@ -49,6 +56,7 @@ function makeFakeSocket() {
     },
     end: vi.fn().mockResolvedValue(undefined),
     user: { name: "Tester" },
+    authState: { creds: { registered: false }, keys: {} },
   };
   return socket;
 }
@@ -203,6 +211,27 @@ describe("waitForConnection", () => {
     const promise = waitForConnection(socket, 10);
     emit("connection.update", { connection: "close" });
     await expect(promise).resolves.toBe("timeout");
+  });
+});
+
+describe("waitForRegistration", () => {
+  it("resolves true immediately when already registered", async () => {
+    const socket = makeFakeSocket();
+    socket.authState.creds.registered = true;
+    await expect(waitForRegistration(socket)).resolves.toBe(true);
+  });
+
+  it("resolves true when creds.update reports registration", async () => {
+    const socket = makeFakeSocket();
+    const promise = waitForRegistration(socket);
+    emit("creds.update", { registered: false });
+    emit("creds.update", { registered: true });
+    await expect(promise).resolves.toBe(true);
+  });
+
+  it("resolves false on timeout", async () => {
+    const socket = makeFakeSocket();
+    await expect(waitForRegistration(socket, 10)).resolves.toBe(false);
   });
 });
 
