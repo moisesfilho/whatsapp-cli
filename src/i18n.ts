@@ -36,6 +36,14 @@ const catalogEn: Catalog = {
   "config.set": "Config key {key} set to {value}",
   "config.invalid": "Invalid config value for {key}",
   "config.invalid_file": "Config file not found: {file}",
+  "error.recipient_exclusive": "Use only one of --to, --group or --name.",
+  "pick.prompt":
+    "Select a recipient (arrows navigate, Enter confirms, Esc/Ctrl+C cancels, type to filter):",
+  "pick.hint": "Type to filter · ↑/↓ move · Enter select · Esc cancel",
+  "pick.empty": 'No contacts or groups match "{query}".',
+  "pick.cancelled": "Selection cancelled.",
+  "recipient.contact": "C",
+  "recipient.group": "G",
 };
 
 const catalogPt: Catalog = {
@@ -73,6 +81,14 @@ const catalogPt: Catalog = {
   "config.set": "Chave {key} definida como {value}",
   "config.invalid": "Valor inválido para config {key}",
   "config.invalid_file": "Arquivo de config não encontrado: {file}",
+  "error.recipient_exclusive": "Use apenas um de --to, --group ou --name.",
+  "pick.prompt":
+    "Selecione um destinatário (setas navegam, Enter confirma, Esc/Ctrl+C cancela, digite para filtrar):",
+  "pick.hint": "Digite para filtrar · ↑/↓ move · Enter seleciona · Esc cancela",
+  "pick.empty": 'Nenhum contato ou grupo corresponde a "{query}".',
+  "pick.cancelled": "Seleção cancelada.",
+  "recipient.contact": "C",
+  "recipient.group": "G",
 };
 
 const catalogs: Record<Language, Catalog> = {

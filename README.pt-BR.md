@@ -1,10 +1,10 @@
 # whatsapp-cli
 
 <p>
-  <img src="https://img.shields.io/badge/version-v0.1.0-blue" alt="Versão">
+  <img src="https://img.shields.io/badge/version-v0.2.0-blue" alt="Versão">
   <img src="https://img.shields.io/badge/license-MIT-green" alt="Licença">
   <img src="https://img.shields.io/badge/node-%3E%3D20-blue" alt="Node">
-  <img src="https://img.shields.io/badge/tests-79%20passing-brightgreen" alt="Testes">
+  <img src="https://img.shields.io/badge/tests-125%20passing-brightgreen" alt="Testes">
   <img src="https://img.shields.io/badge/coverage-100%25-brightgreen" alt="Cobertura">
 </p>
 
@@ -53,6 +53,10 @@ whatsapp status
 
 # Enviar mensagem de texto para um contato
 whatsapp send "Olá!" --to 5585981188645
+
+# Enviar para contato ou grupo por nome parcial (seletor interativo:
+# digite para filtrar, setas para navegar, Enter para confirmar)
+whatsapp send "Olá!" --name "fami"
 
 # Enviar mensagem de texto para um grupo (por nome ou id)
 whatsapp send "Olá!" --group "Minha Família"
@@ -116,6 +120,8 @@ src/
   history.ts  # Histórico de envios (append, read, truncate)
   i18n.ts     # Catálogos inglês/português
   phone.ts    # Normalização de números e helpers de JID
+  picker.ts   # Seletor interativo de destinatário com setas (readline)
+  recipients.ts # Descoberta e filtro de contatos/grupos
   send.ts     # Envio individual e em lote
 tests/        # Suíte Vitest (cobertura 100%)
 ```

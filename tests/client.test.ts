@@ -118,6 +118,20 @@ describe("connect", () => {
     await connect({});
     expect(mockUseMultiFileAuthState).toHaveBeenCalledWith(path.join(TMP_DIR, "session"));
   });
+
+  it("passes syncFullHistory false by default", async () => {
+    await connect({ sessionDir: TMP_DIR });
+    expect(mockMakeWASocket).toHaveBeenCalledWith(
+      expect.objectContaining({ syncFullHistory: false }),
+    );
+  });
+
+  it("passes syncFullHistory true when provided", async () => {
+    await connect({ sessionDir: TMP_DIR, syncFullHistory: true });
+    expect(mockMakeWASocket).toHaveBeenCalledWith(
+      expect.objectContaining({ syncFullHistory: true }),
+    );
+  });
 });
 
 describe("hasSession", () => {

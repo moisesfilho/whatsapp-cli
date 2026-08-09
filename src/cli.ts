@@ -10,6 +10,8 @@ import { recipientsFromCsv, readCsvFile } from "./csv.js";
 import { readHistory, truncateHistory } from "./history.js";
 import { isLanguage } from "./i18n.js";
 import { toPhoneJid } from "./phone.js";
+import { listRecipients, filterRecipients, startCollectingContacts } from "./recipients.js";
+import { pickRecipient } from "./picker.js";
 
 async function closeSocket(socket: WaClient): Promise<void> {
   socket.end(undefined);
@@ -34,7 +36,7 @@ async function main(): Promise<void> {
   program
     .name("whatsapp")
     .description("Send WhatsApp messages, groups and batch sends from the terminal")
-    .version("0.1.0");
+    .version("0.2.0");
 
   async function withSocket<TReturn>(
     action: (socket: WaClient) => TReturn | Promise<TReturn>,
@@ -64,24 +66,34 @@ async function main(): Promise<void> {
       }
       let socket = await connect({
         sessionDir: sessionDir(),
+        syncFullHistory: true,
         onQr: (qr) => {
           console.log(`\n${t("login.pairing")}\n`);
           qrcode.generate(qr, { small: true });
         },
       });
+      let collector = startCollectingContacts(socket);
       let result = await waitForConnection(socket, 300_000);
       while (result === "restart") {
+        collector.finish();
         await closeSocket(socket);
-        socket = await connect({ sessionDir: sessionDir() });
+        socket = await connect({ sessionDir: sessionDir(), syncFullHistory: true });
+        collector = startCollectingContacts(socket);
         result = await waitForConnection(socket, 300_000);
       }
       if (result === "logged-out") {
+        collector.finish();
         console.error(t("error.unauthorized"));
         process.exitCode = 1;
       } else if (result === "timeout") {
+        collector.finish();
         console.error(t("error.connection", { error: "timeout" }));
         process.exitCode = 1;
       } else {
+        await new Promise<void>((resolve) => {
+          setTimeout(resolve, 10_000);
+        });
+        collector.finish();
         console.log(`\n${t("login.success")}`);
       }
       await closeSocket(socket);
@@ -108,7 +120,45 @@ async function main(): Promise<void> {
     .argument("<text>", "Message text")
     .option("--to <number>", "Phone number (e.g. 5585981188645)")
     .option("--group <nameOrId>", "Group name or id")
-    .action(async (text: string, options: { to?: string; group?: string }) => {
+    .option("--name <partial>", "Contact or group partial name (interactive picker)")
+    .action(async (text: string, options: { to?: string; group?: string; name?: string }) => {
+      if (options.name !== undefined && (options.to !== undefined || options.group !== undefined)) {
+        console.error(t("error.recipient_exclusive"));
+        process.exitCode = 1;
+        return;
+      }
+      if (options.name !== undefined) {
+        const name = options.name;
+        await withSocket(async (socket) => {
+          const recipients = await listRecipients(socket);
+          const matches = filterRecipients(recipients, name);
+          if (matches.length === 0) {
+            console.error(t("pick.empty", { query: name }));
+            process.exitCode = 1;
+            return;
+          }
+          const chosen = await pickRecipient(matches, {
+            prompt: t("pick.prompt"),
+            hint: t("pick.hint"),
+            contactLabel: t("recipient.contact"),
+            groupLabel: t("recipient.group"),
+          });
+          if (chosen === null) {
+            console.log(t("pick.cancelled"));
+            return;
+          }
+          const result = await sendText(socket, chosen.jid, text);
+          if (result.ok) {
+            console.log(t("send.success", { target: chosen.name, id: result.id ?? "" }));
+          } else {
+            console.error(
+              t("error.send_failed", { target: chosen.name, error: result.error ?? "" }),
+            );
+            process.exitCode = 1;
+          }
+        });
+        return;
+      }
       await withSocket(async (socket) => {
         if (options.group !== undefined) {
           const jid = await findGroup(socket, options.group);

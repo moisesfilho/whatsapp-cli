@@ -9,6 +9,7 @@ export type QrHandler = (qr: string) => void;
 
 export interface ConnectionOptions {
   sessionDir?: string;
+  syncFullHistory?: boolean;
   onQr?: QrHandler;
   onDisconnect?: (reason: string) => void;
 }
@@ -40,7 +41,7 @@ export async function connect(options: ConnectionOptions = {}): Promise<WaClient
   const socket = makeWASocket({
     auth: state,
     printQRInTerminal: false,
-    syncFullHistory: false,
+    syncFullHistory: options.syncFullHistory ?? false,
     markOnlineOnConnect: true,
     logger: pino({ level: "silent" }),
   });
