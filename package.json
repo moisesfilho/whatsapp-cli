@@ -1,6 +1,6 @@
 {
   "name": "whatsapp-cli",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Send WhatsApp messages, groups and batches from the terminal using Baileys",
   "type": "module",
   "bin": {

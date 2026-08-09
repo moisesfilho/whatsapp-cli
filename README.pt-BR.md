@@ -1,7 +1,7 @@
 # whatsapp-cli
 
 <p>
-  <img src="https://img.shields.io/badge/version-v0.2.0-blue" alt="Versão">
+  <img src="https://img.shields.io/badge/version-v0.2.1-blue" alt="Versão">
   <img src="https://img.shields.io/badge/license-MIT-green" alt="Licença">
   <img src="https://img.shields.io/badge/node-%3E%3D20-blue" alt="Node">
   <img src="https://img.shields.io/badge/tests-125%20passing-brightgreen" alt="Testes">

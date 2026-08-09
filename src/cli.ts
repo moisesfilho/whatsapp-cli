@@ -36,7 +36,7 @@ async function main(): Promise<void> {
   program
     .name("whatsapp")
     .description("Send WhatsApp messages, groups and batch sends from the terminal")
-    .version("0.2.0");
+    .version("0.2.1");
 
   async function withSocket<TReturn>(
     action: (socket: WaClient) => TReturn | Promise<TReturn>,

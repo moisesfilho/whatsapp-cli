@@ -265,4 +265,40 @@ describe("pickRecipient", () => {
     await expect(promise).resolves.toEqual(alice);
     input.emit("keypress", undefined, { name: "c", ctrl: true });
   });
+
+  it("paginates a long list and scrolls to the last candidate", async () => {
+    const { input, output } = makeStreams();
+    const chunks = collectOutput(output);
+    const many: Recipient[] = Array.from({ length: 25 }, (_, i) => ({
+      jid: `1000000${String(i).padStart(2, "0")}`,
+      name: `Contact ${String(i).padStart(2, "0")}`,
+      type: "contact",
+    }));
+    const promise = pickRecipient(many, { input, output });
+    await new Promise<void>((resolve) => setImmediate(resolve));
+    const initial = chunks.join("");
+    expect(initial).toContain("Contact 00");
+    expect(initial).not.toContain("Contact 24");
+    for (let i = 0; i < 24; i++) {
+      input.write("\u{1B}[B");
+    }
+    input.write("\r");
+    await expect(promise).resolves.toEqual(many[24]);
+  });
+
+  it("truncates rows longer than the terminal width", async () => {
+    const { input, output } = makeStreams();
+    const chunks = collectOutput(output);
+    const longName = "x".repeat(200);
+    const long: Recipient[] = [
+      { jid: `1000000001${PHONE_SUFFIX}`, name: longName, type: "contact" },
+    ];
+    const promise = pickRecipient(long, { input, output });
+    await new Promise<void>((resolve) => setImmediate(resolve));
+    const text = chunks.join("");
+    expect(text).toContain("…");
+    expect(text).not.toContain(longName);
+    input.write("\r");
+    await expect(promise).resolves.toEqual(long[0]);
+  });
 });
